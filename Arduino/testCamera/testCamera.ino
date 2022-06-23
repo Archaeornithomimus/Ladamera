@@ -4,7 +4,6 @@
 #include <HCSR04.h>
 
 HCSR04 hc(2, new int[3]{12,13,14},3); //initialisation class HCSR04 (trig pin , echo pin)
-//float tolerance = 10;
 
 /*float zone5 = 5;// 1m m découpé en 5 zone 20cm par zone
 float zone4 = 4;// 2m à 1m découpé en 5 zone
@@ -22,28 +21,17 @@ float proximityL = 0;
 float proximityR = 0;
 float proximityC = 0;
 
-/*// paramètres de votre réseau WiFi
-const char* ssid = "Livebox-A400";
-const char* password = "6CyPd2etHWn7yXbpNH";*/
-
-//AsyncWebServer server(80);
-
 const char* ssid = "ESP32-Access-Point";
 const char* password = "123456789";
 
-String readDistR() {
-  proximityL = hc.dist(0);
-  return String(proximityL);
-}
-
-String readDistC() {
+String readSensor() {
+  proximityR = hc.dist(0);
+  delay(60);
   proximityC = hc.dist(1);
-  return String(proximityC);
-}
-
-String readDistL() {
+  delay(60);
   proximityL = hc.dist(2);
-  return String(proximityR);
+  delay(60);
+  return String(String(proximityR)+","+String(proximityC)+","+String(proximityL));
 }
 
 #define PART_BOUNDARY "123456789000000000000987654321"
@@ -53,6 +41,7 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
+httpd_handle_t sensor_httpd = NULL;
 
 int numero_port; // numéro du port du stream server
 
@@ -119,10 +108,6 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     if (res != ESP_OK) {
       break;
     }
-    // TEST LOOP pour caméra et capteur
-
-    objectDetection();
-    
   }
   last_frame = 0;
   return res;
@@ -148,6 +133,13 @@ static esp_err_t web_handler(httpd_req_t *req) {
   return httpd_resp_send(req, (const char *)pageWeb, taillePage);
 }
 
+static esp_err_t sensor_handler(httpd_req_t *req) { 
+  httpd_resp_set_type(req, "text/plain");
+  //char response[30] = "";
+  return httpd_resp_sendstr(req, (const char *)readSensor().c_str());
+}
+//httpd_resp_set_hdr(req, "Content-Encoding", "identity");
+
 // ********************************************************
 // startCameraServer: démarrage du web server et du stream server
 
@@ -168,6 +160,13 @@ void startCameraServer() {
     .user_ctx  = NULL
   };
 
+  httpd_uri_t sensor_uri = {
+    .uri       = "/sensor",
+    .method    = HTTP_GET,
+    .handler   = sensor_handler,
+    .user_ctx  = NULL
+  };
+  
   Serial.printf("Demarrage du web server sur le port: '%d'\n", config.server_port);
   if (httpd_start(&camera_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(camera_httpd, &index_uri);
@@ -179,7 +178,12 @@ void startCameraServer() {
   if (httpd_start(&stream_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(stream_httpd, &stream_uri);
   }
-
+  config.server_port += 1;
+  config.ctrl_port += 1;
+  Serial.printf("Demarrage du sensor server sur le port: '%d'\n", config.server_port);
+  if (httpd_start(&sensor_httpd, &config) == ESP_OK) {
+    httpd_register_uri_handler(sensor_httpd, &sensor_uri);
+  }
   numero_port = config.server_port;
 }
 
@@ -192,8 +196,6 @@ void setup() {
   Serial.println("====");
   
   pinMode(15,OUTPUT);
-  pinMode(33, OUTPUT);
-  pinMode(4, OUTPUT);
 
   // TO CLEAN
   tone(15, 2000, 1);
@@ -225,7 +227,7 @@ void setup() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;  //YUV422|GRAYSCALE|RGB565|JPEG
   config.frame_size = FRAMESIZE_VGA;  // QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
-  config.jpeg_quality = 10;  // 0-63 ; plus bas = meilleure qualité
+  config.jpeg_quality = 47;//10;  // 0-63 ; plus bas = meilleure qualité
   config.fb_count = 2; // nombre de frame buffers
 
   // initialisation de la caméra
@@ -247,6 +249,12 @@ void setup() {
   Serial.print("AP IP address: ");
   Serial.println(IP);
 
+  /*server.on("/distance", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/plain", readSensor().c_str());
+    distanceSound();
+  });
+  server.begin();*/
+
   startCameraServer();
 
   Serial.print("Camera Ready! Use 'http://");
@@ -256,64 +264,36 @@ void setup() {
 }
 
 // ********************************************************
-// ObjectDetection and wifi transmition
-void objectDetection(){
-  
-  delay(60);
-  
-  delay(60);
-  
+// Distance Sound
+void distanceSound(){
   if ((proximityR == 0) || (proximityL == 0) || (proximityC  == 0)){
-    buzz(12, 1550, 5);
+    buzz(15, 1550, 5);
     Serial.println("zone0");
   } else if ((inRange(0,proximityR,20)) | (inRange(0,proximityL,20)) | (inRange(0,proximityC,20))){
     Serial.println("zone1");
-    buzz(12, 1550, 200);
+    buzz(15, 1550, 200);
   } else if ((inRange(20,proximityR,40)) | (inRange(20,proximityL,40)) | (inRange(20,proximityC,40))){
-    buzz(12, 1550, 400);
+    buzz(15, 1550, 400);
     Serial.println("zone2");
   } else if ((inRange(40,proximityR,60)) | (inRange(40,proximityL,60)) | (inRange(40,proximityC,60))){
-    buzz(12, 1550, 600);
+    buzz(15, 1550, 600);
     Serial.println("zone3");
   } else if ((inRange(60,proximityR,80)) | (inRange(60,proximityL,80)) | (inRange(60,proximityC,80))){
-    buzz(12, 1550, 800);
+    buzz(15, 1550, 800);
     Serial.println("zone4");
   } else if ((inRange(80,proximityR,100)) | (inRange(80,proximityL,100)) | (inRange(80,proximityC,100))){
-    buzz(12, 1550, 1000);
+    buzz(15, 1550, 1000);
     Serial.println("zone5");
   }
 }
 
-/*void sendSensorData(String zone){
-  //udp
-}
-
-void connectionDebug(){
-  if(udp.listen(1234)){
-    Serial.print("UDP Listening on IP: ");
-    Serial.println(WiFi.localIP());
-    udp.onPacket([](AsyncUDPPacket packet) {
-      packet.printf("Your are connected");
-    });
-    udp.print("Hello  client!");
-    
-    
-  }
-}*/
-
-
 // ********************************************************
 // loop ne fait rien!
 void loop() {
-  //udp.broadcastTo("Anyone here?", 1234);
-  
-  digitalWrite(33, LOW);
-  delay(10000);
-  digitalWrite(33, HIGH);
 }
 
 // TO CLEAN AFTER
-void buzz(int targetPin, long frequency, long length) {
+static void buzz(int targetPin, long frequency, long length) {
   long delayValue = 1000000/frequency/2; // calculate the delay value between transitions
   // 1 second's worth of microseconds, divided by the frequency, then split in half since
   // there are two phases to each cycle
@@ -328,8 +308,7 @@ void buzz(int targetPin, long frequency, long length) {
   }
 }
 
-bool inRange(float minimum,float val, float maximum)
-{
+bool inRange(float minimum,float val, float maximum) {
   if ((minimum <= val) && (val <= maximum)){
 
     return true;
