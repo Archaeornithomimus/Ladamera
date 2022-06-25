@@ -1,6 +1,7 @@
 # Ladamera
-https://img.shields.io/github/last-commit/val7600/Ladamera
-https://img.shields.io/github/repo-size/val7600/Ladamera
+![GitHub last commit](https://img.shields.io/github/last-commit/val7600/Ladamera)
+![GitHub repo size](https://img.shields.io/github/repo-size/val7600/Ladamera)
+
 Android Version : 32
 Graddle Version : 7.1.1
 
