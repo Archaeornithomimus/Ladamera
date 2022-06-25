@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
         proximityR = 202;
 
         imageView = (ImageView) findViewById(R.id.carView);
-        imageView.setImageResource(R.drawable.voiture);
+        imageView.setImageResource(R.drawable.Voiture
+        );
         wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
         if (wifiManager.isWifiEnabled() != true) {
@@ -121,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    
+
         /*if (Build.VERSION.SdkInt > BuildVersionCodes.Lollipop)
             mWebview.Settings.MixedContentMode = MixedContentHandling.CompatibilityMode;
         mWebview.Settings.SetPluginState(WebSettings.PluginState.On);
@@ -205,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
                 imageView.setImageResource(R.drawable.voiture_left);
             }
         } else {
-            imageView.setImageResource(R.drawable.voiture);
+            imageView.setImageResource(R.drawable.Voiture);
         }
     }
     public void proximitySound(){

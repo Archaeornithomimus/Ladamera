@@ -136,6 +136,7 @@ static esp_err_t web_handler(httpd_req_t *req) {
 static esp_err_t sensor_handler(httpd_req_t *req) { 
   httpd_resp_set_type(req, "text/plain");
   //char response[30] = "";
+  distanceSound();
   return httpd_resp_sendstr(req, (const char *)readSensor().c_str());
 }
 //httpd_resp_set_hdr(req, "Content-Encoding", "identity");
