@@ -1,4 +1,8 @@
 # Ladamera
+https://img.shields.io/github/last-commit/val7600/Ladamera
+https://img.shields.io/github/repo-size/val7600/Ladamera
+Android Version : 32
+Graddle Version : 7.1.1
 
 L'objectif de ce projet est de concevoir un radar de recul adaptable sur de nombreux modèles de voiture d'occasion ne disposant pas cette option lors de leur sorti d'usine.
 
