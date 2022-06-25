@@ -30,7 +30,7 @@ Dans le cas où du code dois être téléversé, il est nécessaire de connecter
   1) Installer sur son téléphone l'APK fourni dans le dépot
   2) Alimenter l'ESP32-CAM
   3) Au lancement de l'application activer la wifi et désactiver les données mobiles
-  4) La connexion au point d'accès ("") doit se faire automatiquement si ce n'est pas le cas relancer l'application
+  4) La connexion au point d'accès ("ESP32-Access-Point") doit se faire automatiquement si ce n'est pas le cas relancer l'application
   5) Le flux vidéo ainsi que la détection d'obstacle devrait d'afficher
 
 ## Erreurs possibles
