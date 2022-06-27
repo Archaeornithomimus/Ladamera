@@ -5,16 +5,9 @@
 
 HCSR04 hc(2, new int[3]{12,13,14},3); //initialisation class HCSR04 (trig pin , echo pin)
 
-/*float zone5 = 5;// 1m m découpé en 5 zone 20cm par zone
-float zone4 = 4;// 2m à 1m découpé en 5 zone
-float zone3 = 3;// 1m à 40cm découpé en 5 zone
-float zone2 = 2;// 40cm à 20cm découpé en 5 zone
-float zone1 = 1;// 20cm à 0cm découpé en 5 zone
-
-// D2 gauche = sensor 0
-// D3 droite = sensor 1
-// D4 centre = sensor 2
-*/
+// IO12 Droite = sensor 0
+// IO13 Centre = sensor 1
+// IO14 Gauche = sensor 2
 
 
 float proximityL = 0;
@@ -115,7 +108,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 
 // ********************************************************
 // web_handler: construction de la page web
-
+//Unuse Delete if still working without
 static esp_err_t web_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "text/html");
   httpd_resp_set_hdr(req, "Content-Encoding", "identity");
@@ -129,17 +122,14 @@ static esp_err_t web_handler(httpd_req_t *req) {
   strcat(pageWeb, adresse);
   strcat(pageWeb, "/stream'><p>toto</p> </body> </html>");
   int taillePage = strlen(pageWeb);
-
   return httpd_resp_send(req, (const char *)pageWeb, taillePage);
 }
 
 static esp_err_t sensor_handler(httpd_req_t *req) { 
   httpd_resp_set_type(req, "text/plain");
-  //char response[30] = "";
   distanceSound();
   return httpd_resp_sendstr(req, (const char *)readSensor().c_str());
 }
-//httpd_resp_set_hdr(req, "Content-Encoding", "identity");
 
 // ********************************************************
 // startCameraServer: démarrage du web server et du stream server
@@ -147,6 +137,7 @@ static esp_err_t sensor_handler(httpd_req_t *req) {
 void startCameraServer() {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
+// Delete if still working without
   httpd_uri_t index_uri = {
     .uri       = "/",
     .method    = HTTP_GET,
@@ -167,7 +158,8 @@ void startCameraServer() {
     .handler   = sensor_handler,
     .user_ctx  = NULL
   };
-  
+
+  // Delete if still working without
   Serial.printf("Demarrage du web server sur le port: '%d'\n", config.server_port);
   if (httpd_start(&camera_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(camera_httpd, &index_uri);
@@ -197,12 +189,6 @@ void setup() {
   Serial.println("====");
   
   pinMode(15,OUTPUT);
-
-  // TO CLEAN
-  tone(15, 2000, 1);
-  noTone(15);
-  tone(15, 2000, 1);
-  noTone(15);
 
   // définition des broches pour le modèle AI Thinker - ESP32-CAM
   camera_config_t config;

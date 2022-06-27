@@ -49,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
         proximityR = 202;
 
         imageView = (ImageView) findViewById(R.id.carView);
-        imageView.setImageResource(R.drawable.Voiture
-        );
+        imageView.setImageResource(R.drawable.voiture);
         wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
         if (wifiManager.isWifiEnabled() != true) {
@@ -60,8 +59,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
-        //remember id
         int netId = wifiManager.addNetwork(wifiConfig);
         wifiManager.enableNetwork(netId, true);
         wifiManager.reconnect();
@@ -101,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
 
                                             proximityDisplay();
                                             proximitySound();
-                                            //mTextView.setText("Ready Player One");
                                         }
                                     });
                                 }
@@ -122,80 +118,6 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-
-        /*if (Build.VERSION.SdkInt > BuildVersionCodes.Lollipop)
-            mWebview.Settings.MixedContentMode = MixedContentHandling.CompatibilityMode;
-        mWebview.Settings.SetPluginState(WebSettings.PluginState.On);
-        mWebview.Settings.GetPluginState();
-        mWebview.Settings.AllowFileAccess = true;*/
-        /*MyView myViewCompteur = new MyView(this);
-        LinearLayout myLayout1 = (LinearLayout)findViewById(R.id.myView);
-        myLayout1.addView(myViewCompteur);
-        setContentView(myViewCompteur);*/
-
-
-    /*private boolean checkWifiOnAndConnected() {
-        if (wifiManager.isWifiEnabled()) { // Wi-Fi adapter is ON
-            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-            if (wifiInfo != null) {
-                if (wifiInfo.getNetworkId() == -1) {
-                    return false; // Not connected to an access point
-                }
-            } else{
-                return false;
-            }
-
-
-
-            return true; // Connected to an access point
-        } else {
-            return false; // Wi-Fi adapter is OFF
-        }
-    }
-
-    private void enableWifi(){
-        if(wifiManager.isWifiEnabled()!=true){
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                Intent panelIntent = new Intent(Settings.Panel.ACTION_WIFI);
-                startActivityForResult(panelIntent, 545);
-            }
-        }
-    }*/
-
-    private boolean checkWifiState() {
-        int state = wifiManager.getWifiState();
-
-        if (state == wifiManager.WIFI_STATE_ENABLED) {
-            Log.d("testWIFIEnable", "WifiActivé");
-            return true;
-
-        } else if (state == wifiManager.WIFI_STATE_ENABLING) {
-            Handler handler = new Handler();
-            final Runnable r = new Runnable() {
-                public void run() {
-                    handler.postDelayed(this, 1000);
-                }
-            };
-            handler.postDelayed(r, 1000);
-            Log.d("testWIFIEnable", "après temps attente");
-            return false;
-
-        } else if (state == wifiManager.WIFI_STATE_UNKNOWN) {
-            Log.d("testWIFIEnable", "mode inconnue");
-            return false;
-
-        } else if (state == wifiManager.WIFI_STATE_DISABLING) {
-            Log.d("testWIFIEnable", "en désactivation");
-            return false;
-
-        } else if (state == wifiManager.WIFI_STATE_DISABLED) {
-            Log.d("testWIFIEnable", "Wifi désactivé");
-            return false;
-        }
-        Log.d("testWIFIEnable", "default case");
-        return false;
-    }
-
     public void proximityDisplay() {
         if ((proximityR <101) || (proximityC <101) || (proximityL <101)) {
             if ((proximityR <= proximityC) && (proximityR <= proximityL)) {
@@ -206,28 +128,22 @@ public class MainActivity extends AppCompatActivity {
                 imageView.setImageResource(R.drawable.voiture_left);
             }
         } else {
-            imageView.setImageResource(R.drawable.Voiture);
+            imageView.setImageResource(R.drawable.voiture);
         }
     }
     public void proximitySound(){
         if ((proximityR == 0) || (proximityL == 0) || (proximityC == 0)) {
             buzz(0);
-            //Serial.println("zone0");
         } else if ((inRange(0, proximityR, 20)) | (inRange(0, proximityL, 20)) | (inRange(0, proximityC, 20))) {
-            //Serial.println("zone1");
             buzz(1);
         } else if ((inRange(20, proximityR, 40)) | (inRange(20, proximityL, 40)) | (inRange(20, proximityC, 40))) {
             buzz(2);
-            //Serial.println("zone2");
         } else if ((inRange(40, proximityR, 60)) | (inRange(40, proximityL, 60)) | (inRange(40, proximityC, 60))) {
             buzz(3);
-            //Serial.println("zone3");
         } else if ((inRange(60, proximityR, 80)) | (inRange(60, proximityL, 80)) | (inRange(60, proximityC, 80))) {
             buzz(4);
-            //Serial.println("zone4");
         } else if ((inRange(80, proximityR, 100)) | (inRange(80, proximityL, 100)) | (inRange(80, proximityC, 100))) {
             buzz(5);
-            //Serial.println("zone5");
         }
     }
 
@@ -235,21 +151,26 @@ public class MainActivity extends AppCompatActivity {
         ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM,
                 100);
         switch (zone) {
+            // TONE_CDMA_DIAL_TONE_LITE 425HZ
+            // TONE_CDMA_NETWORK_CALLWAITING 440HZ 300ms
+            // TONE_CDMA_ONE_MIN_BEEP 1150Hz + 770Hz 400ms
+            // TONE_DTMF_P DTMF tone for key #: 1477Hz, 941Hz, continuous
+            // TONE_SUP_DIAL Dial tone: CEPT: 425Hz, continuous ANSI (IS-95): 350Hz+440Hz, continuous JAPAN: 400Hz, continuous
             case 0:
-                //toneG.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 200);
-                //toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 200);
                 for (int i =0;i<6;i++){
                     toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
                     toneG.stopTone();
                 }
+                /* TO DO A VOIR POUR MODIF
+                toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
+                toneG.stopTone();
+                */
             case 1:
-                //toneG.startTone(ToneGenerator.TONE_CDMA_ANSWER, 200);
                 for (int i =0;i<5;i++){
                     toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
                     toneG.stopTone();
                 }
             case 2:
-                //toneG.startTone(ToneGenerator.TONE_CDMA_ABBR_INTERCEPT, 200);
                 for (int i =0;i<4;i++){
                     toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
                     toneG.stopTone();
