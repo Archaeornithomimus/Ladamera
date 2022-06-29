@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -34,6 +36,24 @@ public class MainActivity extends AppCompatActivity {
     private float proximityC;
     private float proximityR;
     private ImageView imageView;
+    private SoundPool soundPool;
+    private AudioManager audioManager;
+    private float volume;
+    private boolean loaded;
+    public int soundIdOn =0;
+    public int soundIdOff =0;
+
+    final long numCycles0 = 24;
+    final long numCycles1 = 20;
+    final long numCycles2 = 16;
+    final long numCycles3 = 8;
+    final long numCycles4 = 4;
+    final long numCycles5 = 1;
+    final long delayValue = 1000000 / 2000;
+    Handler handler;
+
+    private static final int streamType = AudioManager.STREAM_ALARM;
+    private int streamId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +67,51 @@ public class MainActivity extends AppCompatActivity {
         proximityL = 200;
         proximityC = 201;
         proximityR = 202;
+
+        audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        handler = new Handler();
+        // Current volumn Index of particular stream type.
+        float currentVolumeIndex = (float) audioManager.getStreamVolume(streamType);
+
+        // Get the maximum volume index for a particular stream type.
+        float maxVolumeIndex  = (float) audioManager.getStreamMaxVolume(streamType);
+
+        // Volumn (0 --> 1)
+        volume = currentVolumeIndex / maxVolumeIndex;
+
+        // Suggests an audio stream whose volume should be changed by
+        // the hardware volume controls.
+        this.setVolumeControlStream(streamType);
+
+        // For Android SDK >= 21
+        if (Build.VERSION.SDK_INT >= 21 ) {
+            AudioAttributes audioAttrib = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+
+            SoundPool.Builder builder= new SoundPool.Builder();
+            builder.setAudioAttributes(audioAttrib).setMaxStreams(1);
+
+            this.soundPool = builder.build();
+        }
+        // for Android SDK < 21
+        else {
+            //SoundPool(int maxStreams, int streamType, int srcQuality);
+            //this.soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+        }
+
+        // When Sound Pool load complete.
+        this.soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                loaded = true;
+            }
+        });
+
+        soundIdOn = this.soundPool.load(this,R.raw.beep_sample,1);
+        soundIdOff = this.soundPool.load(this,R.raw.beep_sample_off,1);
+
 
         imageView = (ImageView) findViewById(R.id.carView);
         imageView.setImageResource(R.drawable.voiture);
@@ -147,50 +212,42 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static void buzz(int zone) {
-        ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM,
-                100);
+    public void buzz(int zone) {
         switch (zone) {
-            // TONE_CDMA_DIAL_TONE_LITE 425HZ
-            // TONE_CDMA_NETWORK_CALLWAITING 440HZ 300ms
-            // TONE_CDMA_ONE_MIN_BEEP 1150Hz + 770Hz 400ms
-            // TONE_DTMF_P DTMF tone for key #: 1477Hz, 941Hz, continuous
-            // TONE_SUP_DIAL Dial tone: CEPT: 425Hz, continuous ANSI (IS-95): 350Hz+440Hz, continuous JAPAN: 400Hz, continuous
             case 0:
-                for (int i =0;i<6;i++){
-                    toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
-                    toneG.stopTone();
-                }
-                /* TO DO A VOIR POUR MODIF
-                toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
-                toneG.stopTone();
-                */
+                playSoundSleep(numCycles0);
             case 1:
-                for (int i =0;i<5;i++){
-                    toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
-                    toneG.stopTone();
-                }
+                playSoundSleep(numCycles1);
             case 2:
-                for (int i =0;i<4;i++){
-                    toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
-                    toneG.stopTone();
-                }
+                playSoundSleep(numCycles2);
             case 3:
-                for (int i =0;i<3;i++){
-                    toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 100);
-                    toneG.stopTone();
-                }
+                playSoundSleep(numCycles3);
             case 4:
-                for (int i =0;i<2;i++){
-                    toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 200);
-                    toneG.stopTone();
-                }
-
+                playSoundSleep(numCycles4);
             case 5:
-                    toneG.startTone(ToneGenerator.TONE_CDMA_PRESSHOLDKEY_LITE, 200);
-                    toneG.stopTone();
+                playSoundSleep(numCycles5);
             default:
-                toneG.stopTone();
+        }
+    }
+
+    private void playSoundSleep(long numCycles) {
+        if (loaded == true) {
+            float leftVolumn = volume;
+            float rightVolumn = volume;
+            streamId = soundPool.play(soundIdOn, leftVolumn, rightVolumn, 0, 0, 1);
+            for (long i = 0; i < numCycles - 1; i++) {
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        streamId = soundPool.play(soundIdOff, leftVolumn, rightVolumn, 0, 0, 1);
+                    }
+                }, delayValue);
+
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        streamId = soundPool.play(soundIdOn, leftVolumn, rightVolumn, 0, 0, 1);
+                    }
+                }, delayValue);
+            }
         }
     }
 
