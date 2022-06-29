@@ -16,13 +16,11 @@ public class CameraView extends WebViewClient {
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         super.onPageStarted(view, url, favicon);
-        Log.i("MyLog", "Your current url when webpage loading.." + url);
     }
 
     // When page load finish.
     @Override
     public void onPageFinished(WebView view, String url) {
-        Log.i("MyLog", "Your current url when webpage loading.. finish" + url);
         super.onPageFinished(view, url);
     }
 
